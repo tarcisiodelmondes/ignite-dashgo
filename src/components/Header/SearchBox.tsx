@@ -9,8 +9,8 @@ export function SearchBox() {
       py="4"
       px="8"
       ml="6"
-      maxW={400}
-      align="center"
+      maxW="400"
+      alignSelf="center"
       color="gray.200"
       position="relative"
       bg="gray.800"
