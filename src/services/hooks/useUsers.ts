@@ -12,12 +12,20 @@ type Users = {
   users: UserProps[];
 };
 
-export function useUsers() {
-  return useQuery("users", getUsers, { staleTime: 1000 * 5 });
+export function useUsers(currentPage: number) {
+  return useQuery(["users", currentPage], () => getUsers(currentPage), {
+    staleTime: 1000 * 5,
+  });
 }
 
-export async function getUsers() {
-  const { data } = await api.get<Users>("users");
+export async function getUsers(currentPage: number) {
+  const { data, headers } = await api.get<Users>("users", {
+    params: {
+      page: currentPage,
+    },
+  });
+
+  const totalCount = Number(headers["x-total-count"]);
 
   const users = data.users.map((user) => ({
     id: user.id,
@@ -30,5 +38,5 @@ export async function getUsers() {
     }),
   }));
 
-  return users;
+  return { users, totalCount };
 }
