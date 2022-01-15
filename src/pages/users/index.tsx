@@ -14,25 +14,39 @@ import {
   Text,
   useBreakpointValue,
   Spinner,
+  Link as ChakraLink,
 } from "@chakra-ui/react";
 import { RiAddLine, RiPencilLine } from "react-icons/ri";
 import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 import Link from "next/link";
-import { useQuery } from "react-query";
-import { api } from "../../services/api";
-import { useUsers } from "../../services/hooks/useUsers";
+import { getUsers, useUsers } from "../../services/hooks/useUsers";
 import { useState } from "react";
+import { queryClient } from "../../services/queryClient";
+import { api } from "../../services/api";
+import { GetServerSideProps } from "next";
 
-export default function UsersList() {
+export default function UsersList(props) {
   const [currentPage, setCurrentPage] = useState(1);
-  const { data, isLoading, error, isFetching } = useUsers(currentPage);
+  const { data, isLoading, error, isFetching } = useUsers(currentPage, props);
 
   const isWideVersion = useBreakpointValue({
     base: false,
     lg: true,
   });
+
+  async function handlePrefetchUser(userId: string) {
+    await queryClient.prefetchQuery(
+      ["user", userId],
+      async () => {
+        const { data } = await api.get(`users/${userId}`);
+
+        return data;
+      },
+      { staleTime: 1000 * 60 * 10 }
+    );
+  }
 
   return (
     <Box>
@@ -92,10 +106,17 @@ export default function UsersList() {
                         <Checkbox colorScheme="pink" />
                       </Td>
                       <Td>
-                        <Text>{user.name}</Text>
+                        <Text>
+                          <ChakraLink
+                            onMouseEnter={() => handlePrefetchUser(user.id)}
+                            color="pink.500"
+                          >
+                            {user.name}
+                          </ChakraLink>
+                        </Text>
                         <Text>{user.email}</Text>
                       </Td>
-                      {isWideVersion && <Td>{user.createdAt}</Td>}
+                      {isWideVersion && <Td>{user.created_at}</Td>}
                       <Td>
                         {isWideVersion && (
                           <Button
@@ -128,3 +149,11 @@ export default function UsersList() {
     </Box>
   );
 }
+
+export const getServerSide: GetServerSideProps = async () => {
+  const users = await getUsers(1);
+
+  return {
+    props: { ...users },
+  };
+};
