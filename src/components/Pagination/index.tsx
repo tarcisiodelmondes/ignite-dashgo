@@ -22,7 +22,7 @@ export function Pagination({
   currentPage = 1,
   registersPerPage = 10,
 }: PaginationProps) {
-  const lastPage = Math.floor(totalCountOfRegisters / registersPerPage);
+  const lastPage = Math.ceil(totalCountOfRegisters / registersPerPage);
 
   const previousPage =
     currentPage > 1
@@ -45,7 +45,8 @@ export function Pagination({
       spacing="6"
     >
       <Box>
-        <strong>0</strong> - <strong>10</strong> de <strong>100</strong>
+        <strong>0</strong> - <strong>{registersPerPage}</strong> de{" "}
+        <strong>{totalCountOfRegisters}</strong>
       </Box>
       <Stack direction="row" spacing="2">
         {currentPage > 1 + siblingsCount && (
